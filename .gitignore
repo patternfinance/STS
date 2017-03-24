@@ -5,3 +5,5 @@ build
 dist
 
 sts.egg-info
+
+release.sh
