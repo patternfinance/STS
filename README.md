@@ -36,14 +36,14 @@ import sts.universe as Universe
 
 # Create an universe
 user_uni = Universe.NormalUniverse()
-user_uni.setUniverse('myuniverse_20170421.json')
+user_uni.set_universe('myuniverse_20170421.json')
 # Add stock to universe
-user_uni.addStock('sh601211', '国泰君安')
+user_uni.add_stock('sh601211', '国泰君安')
     
 # Load built-in (core or user) universe from UniverseBase
-ubase = Universe.UniverseBase()
-# uni = ubase.loadUniverse(repo='core', name='hs300')
-uni = ubase.loadUniverse(repo='user', name='myuniverse_20170421.json')
+ubox = Universe.UniverseBox()
+# uni = ubox.load_niverse(repo='core', name='hs300')
+uni = ubox.load_niverse(repo='user', name='myuniverse_20170421.json')
 ```
 
 
@@ -68,9 +68,9 @@ tsObj = DataSource.select(tsObj, '2014-01-01', DataSource.today())
 ```python
 import sts.tradingdesk as TradingDesk
 
-# Load built-in strategy from StrategyBase 
-sbase = Strategy.StrategyBase()
-maco = sbase.loadStrategy(repo='pf', name='MovingAverageCrossover')
+# Load built-in strategy from StrategyBox 
+sbox = Strategy.StrategyBox()
+maco = sbox.load_strategy(repo='pf', name='MovingAverageCrossover')
 maco.mat = 'sma' # 设置使用的moving average类型
 maco.keyFast = 'open' # 使用开盘价来计算fast moving average
 maco.keySlow = 'close' # 使用收盘价来计算slow moving average
@@ -84,6 +84,46 @@ trader = TradingDesk.LegacyDesk(uni, maco)
 trader.set_slippage(0.002) # trader.slippage = 0.002
 trader.set_commission(0.00025) # trader.commission = 0.00025
 trader.set_benchmark('sh000300') # trader.benchmark = 'sh000300'
+
+# 创建一个多策略的TradingDesk
+# 从StrategyBox中加载多个策略
+# 我们稍后可以将策略配置存入json文件中
+strategies_json = [{
+    'repo': 'pf',
+    'name': 'MovingAverageCrossover',
+    'params': {
+        'mat': 'sma',
+        'keyFast': 'open',
+        'keySlow': 'close',
+        'fastWindow': 5,
+        'slowWindow': 25
+    }
+}, {
+    'repo': 'pf',
+    'name': 'SimpleMeanReversion',
+    'params': {
+        'type': 'log-returns',
+        'key': 'close'
+    }
+}, {
+    'repo': 'pf',
+    'name': 'RelativeStrength',
+    'params': {
+        'overbought': 80,
+        'oversold': 20,
+        'period': 2
+    }
+}, {
+    'repo': 'pf',
+    'name': 'DualThrust',
+    'params': {
+        'k1': 0.5,
+        'k2': 0.5,
+        'window': 5
+    }
+}]
+strategies = sbox.load_strategies(strategies_json)
+quant = TradingDesk.QuantDesk(uni, strategies)
 ```
 
 
